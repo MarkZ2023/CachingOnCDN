@@ -4,6 +4,7 @@ type CacheBadgeProps = {
   cacheMode: CacheMode;
   revalidateSeconds: number;
   generatedAt: string;
+  viewer: string;
 };
 
 const labels: Record<CacheMode, string> = {
@@ -16,6 +17,7 @@ export function CacheBadge({
   cacheMode,
   revalidateSeconds,
   generatedAt,
+  viewer,
 }: CacheBadgeProps) {
   const isCached = cacheMode === "cdn" || cacheMode === "isr";
 
@@ -34,6 +36,9 @@ export function CacheBadge({
       <p className="mt-1 text-muted-foreground">
         Data fetched at{" "}
         <time dateTime={generatedAt}>{generatedAt}</time>
+      </p>
+      <p className="mt-1 text-muted-foreground">
+        Viewer: {viewer === "anonymous" ? "anonymous (no cookie)" : viewer}
       </p>
     </div>
   );

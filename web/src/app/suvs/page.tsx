@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
 import { PhotoGrid } from "@/components/photo-grid";
+import { UserAuth } from "@/components/user-auth";
+import { getAuthUser } from "@/lib/auth";
 import { apiUrl, type CarCategory } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +49,7 @@ export async function headers() {
 }
 
 export default async function SuvsPage() {
-  const category = await fetchCategory();
+  const [category, user] = await Promise.all([fetchCategory(), getAuthUser()]);
 
   if (!category) {
     notFound();
@@ -56,7 +58,7 @@ export default async function SuvsPage() {
   return (
     <>
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-3">
           <Link
             href="/sedans"
             prefetch={false}
@@ -64,7 +66,8 @@ export default async function SuvsPage() {
           >
             Car Gallery
           </Link>
-          <nav className="flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-center gap-4">
+            <nav className="flex flex-wrap items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.slug}
@@ -80,7 +83,9 @@ export default async function SuvsPage() {
                 {item.title}
               </Link>
             ))}
-          </nav>
+            </nav>
+            <UserAuth returnTo="/suvs" />
+          </div>
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-6 py-10">
@@ -98,6 +103,7 @@ export default async function SuvsPage() {
               cacheMode="cdn"
               revalidateSeconds={30}
               generatedAt={new Date().toISOString()}
+              viewer={user ?? "anonymous"}
             />
           </div>
         </section>
