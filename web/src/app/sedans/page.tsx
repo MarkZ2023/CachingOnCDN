@@ -40,10 +40,9 @@ export async function generateMetadata() {
 }
 
 // CDN cache: set Cache-Control on the HTML response via headers().
-// Also configured in next.config.ts for /sedans.
 export async function headers() {
   return {
-    "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+    "Cache-Control": "public, s-maxage=15",
   };
 }
 
@@ -97,7 +96,7 @@ export default async function SedansPage() {
             </div>
             <CacheBadge
               cacheMode="cdn"
-              revalidateSeconds={60}
+              revalidateSeconds={15}
               generatedAt={new Date().toISOString()}
             />
           </div>

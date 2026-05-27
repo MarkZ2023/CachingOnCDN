@@ -16,17 +16,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async headers() {
-    return ["/sedans", "/suvs"].map((source) => ({
-      source,
-      headers: [
-        {
-          key: "Cache-Control",
-          value: "public, s-maxage=60, stale-while-revalidate=300",
-        },
-      ],
-    }));
-  },
 };
 
 export default nextConfig;
