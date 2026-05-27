@@ -1,8 +1,3 @@
-import {
-  getCacheControlHeader,
-  getCachePolicy,
-} from "@/lib/cache-policies";
-
 export type CarPhoto = {
   id: string;
   url: string;
@@ -22,46 +17,14 @@ export type CategoryNavItem = {
   title: string;
 };
 
-const apiUrl = process.env.API_URL ?? "http://localhost:3001";
+export const apiUrl = process.env.API_URL ?? "http://localhost:3001";
 
-async function fetchFromApi<T>(
-  path: string,
-  init?: RequestInit,
-): Promise<T> {
-  const response = await fetch(`${apiUrl}${path}`, {
-    cache: "no-store",
-    ...init,
-  });
+export async function getCategories(): Promise<CategoryNavItem[]> {
+  const response = await fetch(`${apiUrl}/categories`);
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${path}`);
+    throw new Error(`API request failed: ${response.status} /categories`);
   }
 
-  return response.json() as Promise<T>;
-}
-
-export function getCategories(): Promise<CategoryNavItem[]> {
-  return fetchFromApi<CategoryNavItem[]>("/categories");
-}
-
-export function getCategory(slug: string): Promise<CarCategory | null> {
-  return fetch(`${apiUrl}/categories/${slug}`, { cache: "no-store" }).then(
-    (response) => {
-      if (response.status === 404) {
-        return null;
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          `API request failed: ${response.status} /categories/${slug}`,
-        );
-      }
-
-      return response.json() as Promise<CarCategory>;
-    },
-  );
-}
-
-export function getPageCacheControl(slug: string): string {
-  return getCacheControlHeader(getCachePolicy(slug));
+  return response.json() as Promise<CategoryNavItem[]>;
 }

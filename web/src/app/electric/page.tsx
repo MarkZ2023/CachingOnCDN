@@ -1,18 +1,29 @@
-import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
 import { PhotoGrid } from "@/components/photo-grid";
 import { SiteNav } from "@/components/site-nav";
-import { getCachePolicy } from "@/lib/cache-policies";
-import { getCategory, getPageCacheControl } from "@/lib/api";
+import { apiUrl, type CarCategory } from "@/lib/api";
 
-type CategoryPageProps = {
-  params: Promise<{ slug: string }>;
-};
+const revalidateSeconds = 60;
 
-export async function generateMetadata({ params }: CategoryPageProps) {
-  const { slug } = await params;
-  const category = await getCategory(slug);
+async function fetchCategory(): Promise<CarCategory | null> {
+  const response = await fetch(`${apiUrl}/categories/electric`);
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `API request failed: ${response.status} /categories/electric`,
+    );
+  }
+
+  return response.json() as Promise<CarCategory>;
+}
+
+export async function generateMetadata() {
+  const category = await fetchCategory();
 
   if (!category) {
     return { title: "Category not found" };
@@ -24,15 +35,11 @@ export async function generateMetadata({ params }: CategoryPageProps) {
   };
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { slug } = await params;
-  const policy = getCachePolicy(slug);
+// ISR: statically generated at build, then revalidated every 60 seconds.
+export const revalidate = 60;
 
-  if (policy.mode === "no-store") {
-    await connection();
-  }
-
-  const category = await getCategory(slug);
+export default async function ElectricPage() {
+  const category = await fetchCategory();
 
   if (!category) {
     notFound();
@@ -40,7 +47,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <>
-      <SiteNav activeSlug={slug} />
+      <SiteNav activeSlug="electric" />
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-6 py-10">
         <section className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -53,7 +60,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               </p>
             </div>
             <CacheBadge
-              cacheMode={policy.mode}
+              cacheMode="isr"
+              revalidateSeconds={revalidateSeconds}
               generatedAt={new Date().toISOString()}
             />
           </div>
@@ -62,12 +70,4 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </main>
     </>
   );
-}
-
-export async function headers({ params }: CategoryPageProps) {
-  const { slug } = await params;
-
-  return {
-    "Cache-Control": getPageCacheControl(slug),
-  };
 }

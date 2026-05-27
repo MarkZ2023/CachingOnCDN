@@ -1,7 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
-import { cdnCachedSlugs } from "./src/lib/cache-policies";
 
 const rootDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -18,8 +17,8 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    return cdnCachedSlugs.map((slug) => ({
-      source: `/${slug}`,
+    return ["/sedans", "/suvs"].map((source) => ({
+      source,
       headers: [
         {
           key: "Cache-Control",

@@ -12,7 +12,7 @@ export async function SiteNav({ activeSlug }: SiteNavProps) {
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link href="/sedans" className="text-lg font-semibold tracking-tight">
+        <Link href="/sedans" prefetch={false} className="text-lg font-semibold tracking-tight">
           Car Gallery
         </Link>
         <nav className="flex flex-wrap items-center gap-1">
@@ -23,6 +23,7 @@ export async function SiteNav({ activeSlug }: SiteNavProps) {
               <Link
                 key={category.slug}
                 href={`/${category.slug}`}
+                prefetch={false}
                 className={cn(
                   "rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                   isActive

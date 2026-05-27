@@ -1,24 +1,35 @@
-import { cn } from "@/lib/utils";
+export type CacheMode = "cdn" | "isr" | "no-store";
 
 type CacheBadgeProps = {
-  cacheMode: "cdn" | "no-store";
+  cacheMode: CacheMode;
+  revalidateSeconds: number;
   generatedAt: string;
 };
 
-export function CacheBadge({ cacheMode, generatedAt }: CacheBadgeProps) {
-  const isCdn = cacheMode === "cdn";
+const labels: Record<CacheMode, string> = {
+  cdn: "Page CDN cacheable",
+  isr: "ISR page",
+  "no-store": "Page not CDN cached",
+};
+
+export function CacheBadge({
+  cacheMode,
+  revalidateSeconds,
+  generatedAt,
+}: CacheBadgeProps) {
+  const isCached = cacheMode === "cdn" || cacheMode === "isr";
 
   return (
     <div
-      className={cn(
-        "rounded-lg border px-4 py-3 text-sm",
-        isCdn
-          ? "border-emerald-200 bg-emerald-50 text-emerald-950"
-          : "border-amber-200 bg-amber-50 text-amber-950",
-      )}
+      className={
+        isCached
+          ? "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950"
+          : "rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+      }
     >
       <p className="font-medium">
-        {isCdn ? "Page CDN cacheable" : "Page not CDN cached"}
+        {labels[cacheMode]}
+        {revalidateSeconds > 0 ? ` (${revalidateSeconds}s)` : ""}
       </p>
       <p className="mt-1 text-muted-foreground">
         Data fetched at{" "}
