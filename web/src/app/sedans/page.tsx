@@ -48,6 +48,9 @@ export async function headers() {
   };
 }
 
+// Render per request so headers() apply.
+export const dynamic = "force-dynamic";
+
 export default async function SedansPage() {
   const [category, user] = await Promise.all([fetchCategory(), getAuthUser()]);
 

@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
+import { CdnRouteNote } from "@/components/cdn-route-note";
 import { PhotoGrid } from "@/components/photo-grid";
-import { UserAuth } from "@/components/user-auth";
-import { getAuthUser } from "@/lib/auth";
 import { apiUrl, type CarCategory } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -48,8 +47,11 @@ export async function headers() {
   };
 }
 
+// Render per request so headers() apply; proxy.ts strips cookies for CDN cache keys.
+export const dynamic = "force-dynamic";
+
 export default async function SuvsPage() {
-  const [category, user] = await Promise.all([fetchCategory(), getAuthUser()]);
+  const category = await fetchCategory();
 
   if (!category) {
     notFound();
@@ -84,7 +86,7 @@ export default async function SuvsPage() {
               </Link>
             ))}
             </nav>
-            <UserAuth returnTo="/suvs" />
+            <CdnRouteNote />
           </div>
         </div>
       </header>
@@ -103,7 +105,7 @@ export default async function SuvsPage() {
               cacheMode="cdn"
               revalidateSeconds={30}
               generatedAt={new Date().toISOString()}
-              viewer={user ?? "anonymous"}
+              viewer="anonymous (cookie stripped by proxy)"
             />
           </div>
         </section>
