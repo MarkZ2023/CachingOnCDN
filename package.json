@@ -5,7 +5,7 @@
     "dev": "pnpm --parallel --filter web --filter api dev",
     "dev:web": "pnpm --filter web dev",
     "dev:api": "pnpm --filter api dev",
-    "build": "pnpm --filter web build",
+    "build": "pnpm --filter api build && pnpm --filter web build",
     "lint": "pnpm --filter web lint"
   },
   "packageManager": "pnpm@10.20.0"

@@ -2,7 +2,7 @@ import {
   getCacheControlHeader,
   getCachePolicy,
   type CacheMode,
-} from "@shared/cache-policies";
+} from "@/lib/cache-policies";
 
 export type { CacheMode };
 

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
 import { PhotoGrid } from "@/components/photo-grid";
 import { SiteNav } from "@/components/site-nav";
-import { getCachePolicy } from "@shared/cache-policies";
+import { getCachePolicy } from "@/lib/cache-policies";
 import { getCategory, getPageCacheControl } from "@/lib/api";
 
 type CategoryPageProps = {

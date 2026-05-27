@@ -4,7 +4,7 @@ import { cors } from "hono/cors";
 import {
   getCacheControlHeader,
   getCachePolicy,
-} from "../../shared/cache-policies.js";
+} from "./lib/cache-policies.js";
 import { categories, categoryNavItems } from "./data/categories.js";
 
 const app = new Hono();

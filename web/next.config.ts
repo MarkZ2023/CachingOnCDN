@@ -1,9 +1,13 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
-import { cdnCachedSlugs } from "../shared/cache-policies";
+import { cdnCachedSlugs } from "./src/lib/cache-policies";
+
+const rootDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const nextConfig: NextConfig = {
   turbopack: {
-    root: "..",
+    root: rootDir,
   },
   images: {
     remotePatterns: [
