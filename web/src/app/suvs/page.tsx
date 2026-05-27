@@ -47,9 +47,6 @@ export async function headers() {
   };
 }
 
-// Render per request so headers() apply; proxy.ts strips cookies for CDN cache keys.
-export const dynamic = "force-dynamic";
-
 export default async function SuvsPage() {
   const category = await fetchCategory();
 
