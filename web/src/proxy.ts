@@ -15,12 +15,19 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const cookieWasSent = request.headers.has("cookie");
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.delete("cookie");
 
-  return NextResponse.next({
+  const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
+
+  response.headers.set("x-cookie-stripped", "true");
+  response.headers.set("x-cookie-was-sent", cookieWasSent ? "true" : "false");
+
+  return response;
 }
 
 export const proxyConfig = {
