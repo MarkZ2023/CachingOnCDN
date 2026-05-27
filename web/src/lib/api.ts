@@ -1,10 +1,7 @@
 import {
   getCacheControlHeader,
   getCachePolicy,
-  type CacheMode,
 } from "@/lib/cache-policies";
-
-export type { CacheMode };
 
 export type CarPhoto = {
   id: string;
@@ -18,8 +15,6 @@ export type CarCategory = {
   title: string;
   description: string;
   photos: CarPhoto[];
-  cacheMode: CacheMode;
-  generatedAt: string;
 };
 
 export type CategoryNavItem = {
@@ -50,25 +45,21 @@ export function getCategories(): Promise<CategoryNavItem[]> {
 }
 
 export function getCategory(slug: string): Promise<CarCategory | null> {
-  const policy = getCachePolicy(slug);
-  const fetchInit =
-    policy.mode === "cdn"
-      ? { next: { revalidate: policy.sMaxAge } }
-      : { cache: "no-store" as const };
+  return fetch(`${apiUrl}/categories/${slug}`, { cache: "no-store" }).then(
+    (response) => {
+      if (response.status === 404) {
+        return null;
+      }
 
-  return fetch(`${apiUrl}/categories/${slug}`, fetchInit).then((response) => {
-    if (response.status === 404) {
-      return null;
-    }
+      if (!response.ok) {
+        throw new Error(
+          `API request failed: ${response.status} /categories/${slug}`,
+        );
+      }
 
-    if (!response.ok) {
-      throw new Error(
-        `API request failed: ${response.status} /categories/${slug}`,
-      );
-    }
-
-    return response.json() as Promise<CarCategory>;
-  });
+      return response.json() as Promise<CarCategory>;
+    },
+  );
 }
 
 export function getPageCacheControl(slug: string): string {

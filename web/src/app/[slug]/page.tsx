@@ -53,8 +53,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               </p>
             </div>
             <CacheBadge
-              cacheMode={category.cacheMode}
-              generatedAt={category.generatedAt}
+              cacheMode={policy.mode}
+              generatedAt={new Date().toISOString()}
             />
           </div>
         </section>

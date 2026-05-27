@@ -18,10 +18,10 @@ export function CacheBadge({ cacheMode, generatedAt }: CacheBadgeProps) {
       )}
     >
       <p className="font-medium">
-        {isCdn ? "CDN cacheable" : "No CDN cache"}
+        {isCdn ? "Page CDN cacheable" : "Page not CDN cached"}
       </p>
       <p className="mt-1 text-muted-foreground">
-        API data generated at{" "}
+        Data fetched at{" "}
         <time dateTime={generatedAt}>{generatedAt}</time>
       </p>
     </div>
