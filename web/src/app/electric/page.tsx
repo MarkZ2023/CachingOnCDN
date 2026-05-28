@@ -5,8 +5,6 @@ import { CacheStrategyExplainer } from "@/components/cache-strategy-explainer";
 import { CategoryApiNote } from "@/components/category-api-note";
 import { PageSourceLink } from "@/components/page-source-link";
 import { PhotoGrid } from "@/components/photo-grid";
-import { UserAuth } from "@/components/user-auth";
-import { getAuthUser } from "@/lib/auth";
 import { fetchCategory } from "@/lib/fetch-category";
 import { cn } from "@/lib/utils";
 
@@ -36,14 +34,13 @@ export async function generateMetadata() {
 export const revalidate = 60;
 
 export default async function ElectricPage() {
-  const [category, user] = await Promise.all([
-    fetchCategory("electric"),
-    getAuthUser(),
-  ]);
+  const category = await fetchCategory("electric");
 
   if (!category) {
     notFound();
   }
+
+  const viewer = category.personalizedFor ?? "anonymous";
 
   return (
     <>
@@ -56,8 +53,7 @@ export default async function ElectricPage() {
           >
             Car Gallery
           </Link>
-          <div className="flex flex-wrap items-center gap-4">
-            <nav className="flex flex-wrap items-center gap-1">
+          <nav className="flex flex-wrap items-center gap-1">
             {navItems.map((item) => (
               <Link
                 key={item.slug}
@@ -73,9 +69,7 @@ export default async function ElectricPage() {
                 {item.title}
               </Link>
             ))}
-            </nav>
-            <UserAuth returnTo="/electric" />
-          </div>
+          </nav>
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-6 py-10">
@@ -91,22 +85,30 @@ export default async function ElectricPage() {
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {category.description}
               </p>
+              <p className="text-sm text-muted-foreground">
+                Sign in on{" "}
+                <Link href="/sports" prefetch={false} className="underline underline-offset-2">
+                  Sports
+                </Link>{" "}
+                to set the cookie — this page has no auth UI; fetchCategory() forwards
+                it to the API.
+              </p>
               <CategoryApiNote category={category} />
               <CacheStrategyExplainer
                 cdnHeaderCode={`// No page headers() — ISR sets cache behavior`}
                 buildConfig="isr"
                 buildConfigCode={`export const revalidate = 60;`}
-                cookieFetchNote="Yes — fetchCategory(), getAuthUser(), and UserAuth all read cookies(). Same helper on every route (lib/fetch-category.ts)."
-                cdnHeaderResult="Ignored — cookies() makes the route dynamic, so Next.js emits private, no-store instead of ISR cache headers."
-                buildResult="Dynamic (ƒ) — cookies() overrides ISR. revalidate = 60 is not honored while cookie reads remain in the page."
-                outcome="Cookie changes car list when signed in (1 photo) vs anonymous (full gallery) — but only because the route renders dynamically per request."
+                cookieFetchNote="No getAuthUser() or UserAuth. cookies() runs only inside fetchCategory() when forwarding to the API — that still breaks ISR."
+                cdnHeaderResult="Ignored — route is dynamic (ƒ), so Next.js emits private, no-store instead of ISR cache headers."
+                buildResult="Dynamic (ƒ) — revalidate = 60 is not honored. cookies() inside fetchCategory() opts the route out of ISR at build time."
+                outcome="ISR does not work here despite revalidate = 60. Cookie still changes car list (1 photo vs full gallery) because the route renders dynamically per request."
               />
             </div>
             <CacheBadge
               cacheMode="isr"
               revalidateSeconds={revalidateSeconds}
               generatedAt={new Date().toISOString()}
-              viewer={user ?? "anonymous"}
+              viewer={viewer}
             />
           </div>
         </section>
