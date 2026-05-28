@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { CacheBadge } from "@/components/cache-badge";
 import { PhotoGrid } from "@/components/photo-grid";
 import { UserAuth } from "@/components/user-auth";
-import { getAuthUser } from "@/lib/auth";
+import { AUTH_COOKIE_NAME, getAuthUser } from "@/lib/auth";
 import { apiUrl, type CarCategory } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +16,13 @@ const navItems = [
 ];
 
 async function fetchCategory(): Promise<CarCategory | null> {
-  const response = await fetch(`${apiUrl}/categories/sedans`);
+  const cookieStore = await cookies();
+  const authCookie = cookieStore.get(AUTH_COOKIE_NAME);
+  const headers: HeadersInit = authCookie
+    ? { Cookie: `${AUTH_COOKIE_NAME}=${encodeURIComponent(authCookie.value)}` }
+    : {};
+
+  const response = await fetch(`${apiUrl}/categories/sedans`, { headers });
 
   if (response.status === 404) {
     return null;
@@ -48,8 +55,7 @@ export async function headers() {
   };
 }
 
-// Render per request so headers() apply.
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 
 export default async function SedansPage() {
   const [category, user] = await Promise.all([fetchCategory(), getAuthUser()]);
@@ -100,6 +106,13 @@ export default async function SedansPage() {
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {category.description}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                API returned {category.photos.length} photo
+                {category.photos.length === 1 ? "" : "s"}
+                {category.personalizedFor
+                  ? ` (cookie forwarded for ${category.personalizedFor})`
+                  : " (no auth cookie forwarded)"}
               </p>
             </div>
             <CacheBadge

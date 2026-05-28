@@ -4,6 +4,22 @@ import { cors } from "hono/cors";
 import { categories, categoryNavItems } from "./data/categories.js";
 
 const noStore = "private, no-store, no-cache, must-revalidate";
+const AUTH_COOKIE_NAME = "gallery-user";
+
+function getGalleryUser(cookieHeader: string | undefined): string | null {
+  if (!cookieHeader) {
+    return null;
+  }
+
+  for (const part of cookieHeader.split(";")) {
+    const [name, ...valueParts] = part.trim().split("=");
+    if (name === AUTH_COOKIE_NAME) {
+      return decodeURIComponent(valueParts.join("=")) || null;
+    }
+  }
+
+  return null;
+}
 
 const app = new Hono();
 
@@ -30,6 +46,18 @@ app.get("/categories/:slug", (c) => {
 
   if (!category) {
     return c.json({ error: "Category not found" }, 404);
+  }
+
+  const user = getGalleryUser(c.req.header("cookie"));
+
+  if (user) {
+    c.header("Cache-Control", noStore);
+    return c.json({
+      ...category,
+      description: `Personalized for ${user} — showing one sedan from the API.`,
+      photos: category.photos.slice(0, 1),
+      personalizedFor: user,
+    });
   }
 
   c.header("Cache-Control", noStore);

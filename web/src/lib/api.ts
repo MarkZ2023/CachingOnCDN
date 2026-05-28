@@ -10,6 +10,7 @@ export type CarCategory = {
   title: string;
   description: string;
   photos: CarPhoto[];
+  personalizedFor?: string;
 };
 
 export const apiUrl = process.env.API_URL ?? "http://localhost:3001";
