@@ -89,15 +89,13 @@ export default async function ElectricPage() {
               </p>
               <CategoryApiNote category={category} />
               <CacheStrategyExplainer
-                cdnConfig="export const revalidate = 60 — ISR: Next.js revalidates static HTML every 60s."
-                buildTimeDecision="Intended ISR at build + periodic revalidation — but cookies() opts the route into dynamic rendering."
-                cookiesInRoute="Yes — getAuthUser(), fetchCategory(), and UserAuth all read cookies()."
-                expectedBehavior={[
-                  "ISR is overridden: route renders dynamically (ƒ), not true 60s ISR while cookies remain.",
-                  "Cache-Control: private, no-store from Next.js — not ISR cache headers in DevTools.",
-                  "When signed in, server fetch forwards cookie — API returns 1 photo.",
-                  "Fresh timestamp on each request; viewer name updates after sign-in.",
-                ]}
+                cdnHeaderCode={`// No page headers() — ISR sets cache behavior`}
+                buildConfig="isr"
+                buildConfigCode={`export const revalidate = 60;`}
+                cookieFetchNote="Yes — fetchCategory(), getAuthUser(), and UserAuth all read cookies(). Same helper on every route (lib/fetch-category.ts)."
+                cdnHeaderResult="Ignored — cookies() makes the route dynamic, so Next.js emits private, no-store instead of ISR cache headers."
+                buildResult="Dynamic (ƒ) — cookies() overrides ISR. revalidate = 60 is not honored while cookie reads remain in the page."
+                outcome="Cookie changes car list when signed in (1 photo) vs anonymous (full gallery) — but only because the route renders dynamically per request."
               />
             </div>
             <CacheBadge

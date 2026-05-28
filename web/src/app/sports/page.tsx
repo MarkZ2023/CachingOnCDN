@@ -85,15 +85,16 @@ export default async function SportsPage() {
               </p>
               <CategoryApiNote category={category} />
               <CacheStrategyExplainer
-                cdnConfig="Page headers(): private, no-store, no-cache, must-revalidate — edge must not cache HTML."
-                buildTimeDecision="Dynamic (ƒ) — cookies() forces per-request server render."
-                cookiesInRoute="Yes — getAuthUser(), fetchCategory(), and UserAuth read cookies() on every request."
-                expectedBehavior={[
-                  "X-Vercel-Cache: MISS on each load; Age stays 0.",
-                  "Sign-in works here — header, badge viewer, and photo count update immediately.",
-                  "Signed in: API returns 1 photo (cookie forwarded). Anonymous: full gallery.",
-                  "Use this page to authenticate, then compare with Sedans/SUVs CDN behavior.",
-                ]}
+                cdnHeaderCode={`export async function headers() {
+  return {
+    "Cache-Control": "private, no-store, no-cache, must-revalidate",
+  };
+}`}
+                buildConfig="none"
+                cookieFetchNote="Yes — fetchCategory(), getAuthUser(), and UserAuth all read cookies(). Same helper on every route (lib/fetch-category.ts)."
+                cdnHeaderResult="Accepted — dynamic route respects no-store; CDN should not cache HTML (X-Vercel-Cache: MISS)."
+                buildResult="Dynamic (ƒ) — cookies() in fetchCategory, getAuthUser, and UserAuth force per-request server render."
+                outcome="Cookie changes car list — signed in: 1 photo forwarded to API. Anonymous: full gallery."
               />
             </div>
             <CacheBadge

@@ -4,6 +4,8 @@ import { CacheBadge } from "@/components/cache-badge";
 import { CacheStrategyExplainer } from "@/components/cache-strategy-explainer";
 import { CategoryApiNote } from "@/components/category-api-note";
 import { PhotoGrid } from "@/components/photo-grid";
+import { UserAuth } from "@/components/user-auth";
+import { getAuthUser } from "@/lib/auth";
 import { fetchCategory } from "@/lib/fetch-category";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +37,10 @@ export async function headers() {
 }
 
 export default async function SuvsPage() {
-  const category = await fetchCategory("suvs");
+  const [category, user] = await Promise.all([
+    fetchCategory("suvs"),
+    getAuthUser(),
+  ]);
 
   if (!category) {
     notFound();
@@ -70,6 +75,7 @@ export default async function SuvsPage() {
               </Link>
             ))}
             </nav>
+            <UserAuth returnTo="/suvs" />
           </div>
         </div>
       </header>
@@ -85,22 +91,23 @@ export default async function SuvsPage() {
               </p>
               <CategoryApiNote category={category} />
               <CacheStrategyExplainer
-                cdnConfig="Page headers(): public, max-age=30, s-maxage=30 (browser + CDN TTL 30s)."
-                buildTimeDecision="Static prerender when possible — no force-dynamic; HTML generated at build/deploy."
-                cookiesInRoute="fetchCategory reads cookies(), but proxy.ts strips Cookie on /suvs before render."
-                expectedBehavior={[
-                  "Browser may send Cookie in Request Headers; Response Headers show x-cookie-stripped: true.",
-                  "Page never sees the cookie — API always gets the anonymous full gallery.",
-                  "Shared CDN HTML for all visitors; sign in on Sports to compare.",
-                  "Look for X-Vercel-Cache: HIT/MISS and Age increasing within 30s on repeat loads.",
-                ]}
+                cdnHeaderCode={`export async function headers() {
+  return {
+    "Cache-Control": "public, max-age=30, s-maxage=30",
+  };
+}`}
+                buildConfig="none"
+                cookieFetchNote="Yes — fetchCategory(), getAuthUser(), and UserAuth read cookies() in code. proxy.ts strips Cookie on /suvs before render, so the page never sees it."
+                cdnHeaderResult="May be ignored on prerender (PRERENDER + max-age=0) or accepted on dynamic SSR — check Response Headers. proxy.ts adds x-cookie-stripped: true."
+                buildResult="Often dynamic (ƒ) because cookies() is in the tree — or static (○) if prerendered at build without a request cookie."
+                outcome="Cookie does not change car list — proxy strips it before fetchCategory runs, so API always returns the full gallery."
               />
             </div>
             <CacheBadge
               cacheMode="cdn"
               revalidateSeconds={30}
               generatedAt={new Date().toISOString()}
-              viewer="anonymous (cookie stripped by proxy)"
+              viewer={user ?? "anonymous (proxy strips cookie)"}
             />
           </div>
         </section>

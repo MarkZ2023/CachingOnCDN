@@ -93,15 +93,17 @@ export default async function SedansPage() {
               </p>
               <CategoryApiNote category={category} />
               <CacheStrategyExplainer
-                cdnConfig="Page headers(): public, s-maxage=15 (CDN TTL 15s, no browser max-age)."
-                buildTimeDecision="export const dynamic = 'force-static' — HTML is prerendered at build/deploy."
-                cookiesInRoute="Yes in code (getAuthUser, fetchCategory, UserAuth) — but force-static freezes a build-time snapshot with no cookie."
-                expectedBehavior={[
-                  "X-Vercel-Cache: PRERENDER; custom s-maxage may not appear in DevTools.",
-                  "Timestamp, photo count, and auth UI stay frozen until the next deploy.",
-                  "Sign-in sets a cookie, but this page still shows anonymous build output.",
-                  "API fetch ran at build with no cookie — full photo grid baked in.",
-                ]}
+                cdnHeaderCode={`export async function headers() {
+  return {
+    "Cache-Control": "public, s-maxage=15",
+  };
+}`}
+                buildConfig="force-static"
+                buildConfigCode={`export const dynamic = "force-static";`}
+                cookieFetchNote="Yes — fetchCategory(), getAuthUser(), and UserAuth all read cookies(). Same helper on every route (lib/fetch-category.ts)."
+                cdnHeaderResult="Ignored — prerender serves Next.js defaults (often max-age=0, must-revalidate) instead of your s-maxage=15."
+                buildResult="Static (○) — force-static wins over cookies() in code. HTML baked at build with no request cookie."
+                outcome="Cookie does not change car list at runtime — build-time fetch had no cookie, so full gallery is frozen until redeploy."
               />
             </div>
             <CacheBadge
