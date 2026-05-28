@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
 import { CacheBadge } from "@/components/cache-badge";
+import { CacheStrategyExplainer } from "@/components/cache-strategy-explainer";
+import { CategoryApiNote } from "@/components/category-api-note";
 import { PhotoGrid } from "@/components/photo-grid";
 import { UserAuth } from "@/components/user-auth";
-import { AUTH_COOKIE_NAME, getAuthUser } from "@/lib/auth";
-import { apiUrl, type CarCategory } from "@/lib/api";
+import { getAuthUser } from "@/lib/auth";
+import { fetchCategory } from "@/lib/fetch-category";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -15,28 +16,8 @@ const navItems = [
   { slug: "sports", title: "Sports Cars" },
 ];
 
-async function fetchCategory(): Promise<CarCategory | null> {
-  const cookieStore = await cookies();
-  const authCookie = cookieStore.get(AUTH_COOKIE_NAME);
-  const headers: HeadersInit = authCookie
-    ? { Cookie: `${AUTH_COOKIE_NAME}=${encodeURIComponent(authCookie.value)}` }
-    : {};
-
-  const response = await fetch(`${apiUrl}/categories/sedans`, { headers });
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} /categories/sedans`);
-  }
-
-  return response.json() as Promise<CarCategory>;
-}
-
 export async function generateMetadata() {
-  const category = await fetchCategory();
+  const category = await fetchCategory("sedans");
 
   if (!category) {
     return { title: "Category not found" };
@@ -58,7 +39,10 @@ export async function headers() {
 export const dynamic = "force-static";
 
 export default async function SedansPage() {
-  const [category, user] = await Promise.all([fetchCategory(), getAuthUser()]);
+  const [category, user] = await Promise.all([
+    fetchCategory("sedans"),
+    getAuthUser(),
+  ]);
 
   if (!category) {
     notFound();
@@ -107,13 +91,18 @@ export default async function SedansPage() {
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {category.description}
               </p>
-              <p className="text-sm text-muted-foreground">
-                API returned {category.photos.length} photo
-                {category.photos.length === 1 ? "" : "s"}
-                {category.personalizedFor
-                  ? ` (cookie forwarded for ${category.personalizedFor})`
-                  : " (no auth cookie forwarded)"}
-              </p>
+              <CategoryApiNote category={category} />
+              <CacheStrategyExplainer
+                cdnConfig="Page headers(): public, s-maxage=15 (CDN TTL 15s, no browser max-age)."
+                buildTimeDecision="export const dynamic = 'force-static' — HTML is prerendered at build/deploy."
+                cookiesInRoute="Yes in code (getAuthUser, fetchCategory, UserAuth) — but force-static freezes a build-time snapshot with no cookie."
+                expectedBehavior={[
+                  "X-Vercel-Cache: PRERENDER; custom s-maxage may not appear in DevTools.",
+                  "Timestamp, photo count, and auth UI stay frozen until the next deploy.",
+                  "Sign-in sets a cookie, but this page still shows anonymous build output.",
+                  "API fetch ran at build with no cookie — full photo grid baked in.",
+                ]}
+              />
             </div>
             <CacheBadge
               cacheMode="cdn"

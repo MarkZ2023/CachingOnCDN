@@ -54,7 +54,7 @@ app.get("/categories/:slug", (c) => {
     c.header("Cache-Control", noStore);
     return c.json({
       ...category,
-      description: `Personalized for ${user} — showing one sedan from the API.`,
+      description: `Personalized for ${user} — showing one ${category.title.toLowerCase()} from the API.`,
       photos: category.photos.slice(0, 1),
       personalizedFor: user,
     });

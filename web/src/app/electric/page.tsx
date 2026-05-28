@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
+import { CacheStrategyExplainer } from "@/components/cache-strategy-explainer";
+import { CategoryApiNote } from "@/components/category-api-note";
 import { PhotoGrid } from "@/components/photo-grid";
 import { UserAuth } from "@/components/user-auth";
 import { getAuthUser } from "@/lib/auth";
-import { apiUrl, type CarCategory } from "@/lib/api";
+import { fetchCategory } from "@/lib/fetch-category";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -16,24 +18,8 @@ const navItems = [
 
 const revalidateSeconds = 60;
 
-async function fetchCategory(): Promise<CarCategory | null> {
-  const response = await fetch(`${apiUrl}/categories/electric`);
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `API request failed: ${response.status} /categories/electric`,
-    );
-  }
-
-  return response.json() as Promise<CarCategory>;
-}
-
 export async function generateMetadata() {
-  const category = await fetchCategory();
+  const category = await fetchCategory("electric");
 
   if (!category) {
     return { title: "Category not found" };
@@ -49,7 +35,10 @@ export async function generateMetadata() {
 export const revalidate = 60;
 
 export default async function ElectricPage() {
-  const [category, user] = await Promise.all([fetchCategory(), getAuthUser()]);
+  const [category, user] = await Promise.all([
+    fetchCategory("electric"),
+    getAuthUser(),
+  ]);
 
   if (!category) {
     notFound();
@@ -98,6 +87,18 @@ export default async function ElectricPage() {
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {category.description}
               </p>
+              <CategoryApiNote category={category} />
+              <CacheStrategyExplainer
+                cdnConfig="export const revalidate = 60 — ISR: Next.js revalidates static HTML every 60s."
+                buildTimeDecision="Intended ISR at build + periodic revalidation — but cookies() opts the route into dynamic rendering."
+                cookiesInRoute="Yes — getAuthUser(), fetchCategory(), and UserAuth all read cookies()."
+                expectedBehavior={[
+                  "ISR is overridden: route renders dynamically (ƒ), not true 60s ISR while cookies remain.",
+                  "Cache-Control: private, no-store from Next.js — not ISR cache headers in DevTools.",
+                  "When signed in, server fetch forwards cookie — API returns 1 photo.",
+                  "Fresh timestamp on each request; viewer name updates after sign-in.",
+                ]}
+              />
             </div>
             <CacheBadge
               cacheMode="isr"

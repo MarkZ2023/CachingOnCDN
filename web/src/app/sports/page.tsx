@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
+import { CacheStrategyExplainer } from "@/components/cache-strategy-explainer";
+import { CategoryApiNote } from "@/components/category-api-note";
 import { PhotoGrid } from "@/components/photo-grid";
 import { UserAuth } from "@/components/user-auth";
 import { getAuthUser } from "@/lib/auth";
-import { apiUrl, type CarCategory } from "@/lib/api";
+import { fetchCategory } from "@/lib/fetch-category";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -14,24 +16,8 @@ const navItems = [
   { slug: "sports", title: "Sports Cars" },
 ];
 
-async function fetchCategory(): Promise<CarCategory | null> {
-  const response = await fetch(`${apiUrl}/categories/sports`);
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `API request failed: ${response.status} /categories/sports`,
-    );
-  }
-
-  return response.json() as Promise<CarCategory>;
-}
-
 export async function generateMetadata() {
-  const category = await fetchCategory();
+  const category = await fetchCategory("sports");
 
   if (!category) {
     return { title: "Category not found" };
@@ -45,7 +31,10 @@ export async function generateMetadata() {
 
 // No CDN cache: Cache-Control headers prevent caching at the edge.
 export default async function SportsPage() {
-  const [category, user] = await Promise.all([fetchCategory(), getAuthUser()]);
+  const [category, user] = await Promise.all([
+    fetchCategory("sports"),
+    getAuthUser(),
+  ]);
 
   if (!category) {
     notFound();
@@ -94,6 +83,18 @@ export default async function SportsPage() {
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {category.description}
               </p>
+              <CategoryApiNote category={category} />
+              <CacheStrategyExplainer
+                cdnConfig="Page headers(): private, no-store, no-cache, must-revalidate — edge must not cache HTML."
+                buildTimeDecision="Dynamic (ƒ) — cookies() forces per-request server render."
+                cookiesInRoute="Yes — getAuthUser(), fetchCategory(), and UserAuth read cookies() on every request."
+                expectedBehavior={[
+                  "X-Vercel-Cache: MISS on each load; Age stays 0.",
+                  "Sign-in works here — header, badge viewer, and photo count update immediately.",
+                  "Signed in: API returns 1 photo (cookie forwarded). Anonymous: full gallery.",
+                  "Use this page to authenticate, then compare with Sedans/SUVs CDN behavior.",
+                ]}
+              />
             </div>
             <CacheBadge
               cacheMode="no-store"

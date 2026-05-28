@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
-import { CdnRouteNote } from "@/components/cdn-route-note";
+import { CacheStrategyExplainer } from "@/components/cache-strategy-explainer";
+import { CategoryApiNote } from "@/components/category-api-note";
 import { PhotoGrid } from "@/components/photo-grid";
-import { apiUrl, type CarCategory } from "@/lib/api";
+import { fetchCategory } from "@/lib/fetch-category";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -13,22 +14,8 @@ const navItems = [
   { slug: "sports", title: "Sports Cars" },
 ];
 
-async function fetchCategory(): Promise<CarCategory | null> {
-  const response = await fetch(`${apiUrl}/categories/suvs`);
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} /categories/suvs`);
-  }
-
-  return response.json() as Promise<CarCategory>;
-}
-
 export async function generateMetadata() {
-  const category = await fetchCategory();
+  const category = await fetchCategory("suvs");
 
   if (!category) {
     return { title: "Category not found" };
@@ -48,7 +35,7 @@ export async function headers() {
 }
 
 export default async function SuvsPage() {
-  const category = await fetchCategory();
+  const category = await fetchCategory("suvs");
 
   if (!category) {
     notFound();
@@ -83,7 +70,6 @@ export default async function SuvsPage() {
               </Link>
             ))}
             </nav>
-            <CdnRouteNote />
           </div>
         </div>
       </header>
@@ -97,6 +83,18 @@ export default async function SuvsPage() {
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {category.description}
               </p>
+              <CategoryApiNote category={category} />
+              <CacheStrategyExplainer
+                cdnConfig="Page headers(): public, max-age=30, s-maxage=30 (browser + CDN TTL 30s)."
+                buildTimeDecision="Static prerender when possible — no force-dynamic; HTML generated at build/deploy."
+                cookiesInRoute="fetchCategory reads cookies(), but proxy.ts strips Cookie on /suvs before render."
+                expectedBehavior={[
+                  "Browser may send Cookie in Request Headers; Response Headers show x-cookie-stripped: true.",
+                  "Page never sees the cookie — API always gets the anonymous full gallery.",
+                  "Shared CDN HTML for all visitors; sign in on Sports to compare.",
+                  "Look for X-Vercel-Cache: HIT/MISS and Age increasing within 30s on repeat loads.",
+                ]}
+              />
             </div>
             <CacheBadge
               cacheMode="cdn"
