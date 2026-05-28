@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
 import { CacheStrategyExplainer } from "@/components/cache-strategy-explainer";
 import { CategoryApiNote } from "@/components/category-api-note";
+import { PageSourceLink } from "@/components/page-source-link";
 import { PhotoGrid } from "@/components/photo-grid";
 import { UserAuth } from "@/components/user-auth";
 import { getAuthUser } from "@/lib/auth";
@@ -81,9 +82,12 @@ export default async function ElectricPage() {
         <section className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-4">
-              <h1 className="text-4xl font-semibold tracking-tight">
-                {category.title}
-              </h1>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="text-4xl font-semibold tracking-tight">
+                  {category.title}
+                </h1>
+                <PageSourceLink slug="electric" />
+              </div>
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {category.description}
               </p>

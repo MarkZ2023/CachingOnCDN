@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
 import { CacheStrategyExplainer } from "@/components/cache-strategy-explainer";
 import { CategoryApiNote } from "@/components/category-api-note";
+import { PageSourceLink } from "@/components/page-source-link";
 import { PhotoGrid } from "@/components/photo-grid";
 import { UserAuth } from "@/components/user-auth";
 import { getAuthUser } from "@/lib/auth";
@@ -85,9 +86,12 @@ export default async function SedansPage() {
         <section className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-4">
-              <h1 className="text-4xl font-semibold tracking-tight">
-                {category.title}
-              </h1>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="text-4xl font-semibold tracking-tight">
+                  {category.title}
+                </h1>
+                <PageSourceLink slug="sedans" />
+              </div>
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {category.description}
               </p>
@@ -102,7 +106,7 @@ export default async function SedansPage() {
                 buildConfigCode={`export const dynamic = "force-static";`}
                 cookieFetchNote="Yes — fetchCategory(), getAuthUser(), and UserAuth all read cookies(). Same helper on every route (lib/fetch-category.ts)."
                 cdnHeaderResult="Ignored — prerender serves Next.js defaults (often max-age=0, must-revalidate) instead of your s-maxage=15."
-                buildResult="Static (○) — force-static wins over cookies() in code. HTML baked at build with no request cookie."
+                buildResult="Static (○) — force-static wins over cookies() and headers() in code. HTML baked at build with no request cookie."
                 outcome="Cookie does not change car list at runtime — build-time fetch had no cookie, so full gallery is frozen until redeploy."
               />
             </div>

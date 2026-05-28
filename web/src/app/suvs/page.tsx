@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CacheBadge } from "@/components/cache-badge";
 import { CacheStrategyExplainer } from "@/components/cache-strategy-explainer";
 import { CategoryApiNote } from "@/components/category-api-note";
+import { PageSourceLink } from "@/components/page-source-link";
 import { PhotoGrid } from "@/components/photo-grid";
 import { UserAuth } from "@/components/user-auth";
 import { getAuthUser } from "@/lib/auth";
@@ -83,9 +84,12 @@ export default async function SuvsPage() {
         <section className="space-y-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-4">
-              <h1 className="text-4xl font-semibold tracking-tight">
-                {category.title}
-              </h1>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="text-4xl font-semibold tracking-tight">
+                  {category.title}
+                </h1>
+                <PageSourceLink slug="suvs" showProxy />
+              </div>
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {category.description}
               </p>
@@ -98,8 +102,8 @@ export default async function SuvsPage() {
 }`}
                 buildConfig="none"
                 cookieFetchNote="Yes — fetchCategory(), getAuthUser(), and UserAuth read cookies() in code. proxy.ts strips Cookie on /suvs before render, so the page never sees it."
-                cdnHeaderResult="May be ignored on prerender (PRERENDER + max-age=0) or accepted on dynamic SSR — check Response Headers. proxy.ts adds x-cookie-stripped: true."
-                buildResult="Often dynamic (ƒ) because cookies() is in the tree — or static (○) if prerendered at build without a request cookie."
+                cdnHeaderResult="Ignored — cookies() makes this dynamic, so Next.js emits private, no-store instead of your max-age=30, s-maxage=30."
+                buildResult="Dynamic (ƒ) — cookies() in fetchCategory(), getAuthUser(), and UserAuth. No force-static, so the tree stays dynamic at build time."
                 outcome="Cookie does not change car list — proxy strips it before fetchCategory runs, so API always returns the full gallery."
               />
             </div>
